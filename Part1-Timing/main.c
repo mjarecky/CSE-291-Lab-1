@@ -7,12 +7,12 @@
 #endif
 
 #define LINE_SIZE 64
-// [1.2] TODO: Uncomment the following lines and fill in the correct size
-//#define L1_SIZE TODO
-//#define L2_SIZE TODO
-//#define L3_SIZE TODO
-//#define BUFF_SIZE TODO
- 
+#define L1_SIZE 32768  // 32KiB per physical core
+#define L2_SIZE 262144 // 256KiB per physical core
+#define L3_SIZE 6291456 // 6MiB shared
+#define BUFF_SIZE 131072 // 128KiB
+
+
 int main (int ac, char **av) {
 
     // create 4 arrays to store the latency numbers
@@ -31,15 +31,19 @@ int main (int ac, char **av) {
     volatile uint8_t *target_buffer = (uint8_t *)malloc(LINE_SIZE);
 
     if (NULL == target_buffer) {
-        perror("Unable to malloc");
+        perror("Unable to malloc target");
         return EXIT_FAILURE;
     }
 
-    // [1.2] TODO: Uncomment the following line to allocate a buffer of a size
-    // of your chosing. This will help you measure the latencies at L2 and L3.
-    //volatile uint8_t *eviction_buffer = (uint8_t *)malloc(BUFF_SIZE);
+    // Eviction buffer of 128KiB
+    volatile uint8_t *eviction_buffer = (uint8_t *)malloc(BUFF_SIZE);
 
-    // Example: Measure L1 access latency, store results in l1_latency array
+    if (NULL == eviction_buffer) {
+	perror("Unable to malloc eviction");
+	return EXIT_FAILURE;
+    }
+
+    // Measure L1 access latency, store results in l1_latency array
     for (int i=0; i<SAMPLES; i++){
         // Step 1: bring the target cache line into L1 by simply accessing
         //         the line
@@ -50,19 +54,58 @@ int main (int ac, char **av) {
     }
 
     // ======
-    // [1.2] TODO: Measure DRAM Latency, store results in dram_latency array
+    // [1.2] Measure DRAM Latency, store results in dram_latency array
     // ======
     //
+    for (int i = 0; i < SAMPLES; i++) {
+	
+	// Load cache line, then flush to DRAM
+	tmp = target_buffer[0];
+	clflush((void *)target_buffer);
+
+	dram_latency[i] = measure_one_block_access_time((uint64_t)target_buffer);
+    }
 
     // ======
-    // [1.2] TODO: Measure L2 Latency, store results in l2_latency array
+    // [1.2] Measure L2 Latency, store results in l2_latency array
     // ======
     //
+    for (int i = 0; i < SAMPLES; i++) {
+	
+	tmp = target_buffer[0];
+	
+	for (int j = 0; j < BUFF_SIZE; j += LINE_SIZE)
+	    eviction_buffer[j] = 0;
+	
+	//asm volatile("mfence");
+
+	l2_latency[i] = measure_one_block_access_time((uint64_t)target_buffer);
+    }
 
     // ======
-    // [1.2] TODO: Measure L3 Latency, store results in l3_latency array
+    // [1.2] Measure L3 Latency, store results in l3_latency array
     // ======
     //
+    
+    // Expand eviction buffer to 512KiB
+    eviction_buffer = (uint8_t *)realloc((void *)eviction_buffer, BUFF_SIZE << 2);
+
+    if (NULL == eviction_buffer) {
+	perror("Unable to realloc eviction");
+	return EXIT_FAILURE;
+    }
+
+    for (int i = 0; i < SAMPLES; i++) {
+
+	tmp = target_buffer[0];
+	
+	for (int j = 0; j < (BUFF_SIZE << 2); j += LINE_SIZE)
+	    eviction_buffer[j] = 0;
+	
+	//asm volatile("mfence");
+
+	l3_latency[i] = measure_one_block_access_time((uint64_t)target_buffer);
+    }
 
 
     // Print the results to the screen
@@ -73,10 +116,8 @@ int main (int ac, char **av) {
     PRINT_FUNC(dram_latency, l1_latency, l2_latency, l3_latency);
 
     free((uint8_t *)target_buffer);
-
-    // [1.2] TODO: Uncomment this line once you uncomment the eviction_buffer
-    //             creation line
-    //free((uint8_t *)eviction_buffer);
+    free((uint8_t *)eviction_buffer);
+    
     return 0;
 }
 
