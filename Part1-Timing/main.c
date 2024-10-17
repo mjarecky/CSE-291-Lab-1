@@ -10,8 +10,16 @@
 #define L1_SIZE 32768  // 32KiB per physical core
 #define L2_SIZE 262144 // 256KiB per physical core
 #define L3_SIZE 6291456 // 6MiB shared
-#define BUFF_SIZE 131072 // 128KiB
 
+//#define SMALL_BUFF
+
+#ifdef SMALL_BUFF
+#define BUFF_SIZE 311296
+#define BUFF_SIZE_L2 65536
+#else
+#define BUFF_SIZE 522752
+#define BUFF_SIZE_L2 131072
+#endif
 
 int main (int ac, char **av) {
 
@@ -74,10 +82,8 @@ int main (int ac, char **av) {
 	
 	tmp = target_buffer[0];
 	
-	for (int j = 0; j < BUFF_SIZE; j += LINE_SIZE)
+	for (int j = 0; j < BUFF_SIZE_L2; j += LINE_SIZE)
 	    eviction_buffer[j] = 0;
-	
-	//asm volatile("mfence");
 
 	l2_latency[i] = measure_one_block_access_time((uint64_t)target_buffer);
     }
@@ -86,23 +92,12 @@ int main (int ac, char **av) {
     // [1.2] Measure L3 Latency, store results in l3_latency array
     // ======
     //
-    
-    // Expand eviction buffer to 512KiB
-    eviction_buffer = (uint8_t *)realloc((void *)eviction_buffer, BUFF_SIZE << 2);
-
-    if (NULL == eviction_buffer) {
-	perror("Unable to realloc eviction");
-	return EXIT_FAILURE;
-    }
-
     for (int i = 0; i < SAMPLES; i++) {
 
 	tmp = target_buffer[0];
 	
-	for (int j = 0; j < (BUFF_SIZE << 2); j += LINE_SIZE)
+	for (int j = 0; j < BUFF_SIZE; j += LINE_SIZE)
 	    eviction_buffer[j] = 0;
-	
-	//asm volatile("mfence");
 
 	l3_latency[i] = measure_one_block_access_time((uint64_t)target_buffer);
     }

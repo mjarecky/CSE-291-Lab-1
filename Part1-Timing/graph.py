@@ -39,6 +39,7 @@ for run_id in tqdm(fancy_num_runs):
 fig_all = plt.figure(figsize=(11.25, 7.5))
 ax_all  = fig_all.add_subplot(1,1,1)
 ax_all.set_xlabel("Access Time")
+ax_all.set_xticks(np.arange(0, 300, 50), minor=True)
 ax_all.set_ylabel("Number of Samples")
 
 ax_all.hist(l1_all,  label="L1",   bins=np.arange(0, 300 ), alpha=0.5) 
@@ -46,6 +47,9 @@ ax_all.hist(l2_all,  label="L2",   bins=np.arange(0, 300 ), alpha=0.5)
 ax_all.hist(l3_all,  label="L3",   bins=np.arange(0, 300 ), alpha=0.5) 
 ax_all.hist(mem_all, label="DRAM", bins=np.arange(0, 300 ), alpha=0.5) 
 fig_all.legend()
+
+ax_all.set_xticks(np.arange(0, 300.1, 50))
+ax_all.set_xticks(np.arange(0, 300.1, 10), minor=True)
 
 os.makedirs("graphs", exist_ok=True)
 now = datetime.now() 

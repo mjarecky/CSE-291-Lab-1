@@ -9,7 +9,7 @@
 #ifndef __UTILITY_H__
 #define __UTILITY_H__
 
-#define SAMPLES 500
+#define SAMPLES 300
 
 
 // Function to read the time stamp counter, which is called tsc for short
@@ -35,6 +35,14 @@ static inline uint64_t rdtscpp64() {
 // Details in https://www.felixcloutier.com/x86/lfence
 static inline void lfence() {
     asm volatile("lfence");
+}
+
+static inline void sfence() {
+    asm volatile("sfence");
+}
+
+static inline void mfence() {
+    asm volatile("mfence");
 }
 
 // Here is an example of using "rdtscp" and "mfence" to
