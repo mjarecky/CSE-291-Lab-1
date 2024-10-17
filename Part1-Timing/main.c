@@ -13,6 +13,11 @@
 
 //#define SMALL_BUFF
 
+/* Small eviciton set results in no secondary bump
+ * for L2 access latencies at ~40 cycles. However,
+ * it increses rate of ~25 cycle access latencies
+ * from L3.
+ */
 #ifdef SMALL_BUFF
 #define BUFF_SIZE 311296
 #define BUFF_SIZE_L2 65536
@@ -81,6 +86,7 @@ int main (int ac, char **av) {
     for (int i = 0; i < SAMPLES; i++) {
 	
 	tmp = target_buffer[0];
+	//lfence(); // may have an effect, though if it does it is negligible
 	
 	for (int j = 0; j < BUFF_SIZE_L2; j += LINE_SIZE)
 	    eviction_buffer[j] = 0;
@@ -95,6 +101,7 @@ int main (int ac, char **av) {
     for (int i = 0; i < SAMPLES; i++) {
 
 	tmp = target_buffer[0];
+	//lfence();
 	
 	for (int j = 0; j < BUFF_SIZE; j += LINE_SIZE)
 	    eviction_buffer[j] = 0;
