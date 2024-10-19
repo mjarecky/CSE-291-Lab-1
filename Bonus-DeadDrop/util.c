@@ -100,3 +100,9 @@ int string_to_int(char* s)
 {
     return atoi(s);
 }
+
+ADDR_PTR get_address(uint8_t line, uint8_t set, ADDR_PTR base)
+{
+    return (base + (set << BLOCK_OFFSET_BITS) + \
+	   (line << (SET_INDEX_BITS + BLOCK_OFFSET_BITS)));
+}

@@ -19,6 +19,9 @@
 #define ADDR_PTR uint64_t 
 #define CYCLES uint32_t
 
+#define BLOCK_OFFSET_BITS 6
+#define SET_INDEX_BITS 10
+
 CYCLES measure_one_block_access_time(ADDR_PTR addr);
 
 // You Should Not Use clflush in your final submission
@@ -29,5 +32,7 @@ char *string_to_binary(char *s);
 char *binary_to_string(char *data);
 
 int string_to_int(char* s);
+
+ADDR_PTR get_address(uint8_t line, uint8_t set, ADDR_PTR base);
 
 #endif

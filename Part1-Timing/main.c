@@ -11,7 +11,7 @@
 #define L2_SIZE 262144 // 256KiB per physical core
 #define L3_SIZE 6291456 // 6MiB shared
 
-//#define SMALL_BUFF
+#define SMALL_BUFF
 
 /* Small eviciton set results in no secondary bump
  * for L2 access latencies at ~40 cycles. However,
