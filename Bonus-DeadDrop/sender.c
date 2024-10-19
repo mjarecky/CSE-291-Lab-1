@@ -11,6 +11,9 @@
  * cache can be modified. As such, 32 unique addresses can be made.
  */
 #define NUM_ADDRESSES 32
+
+// Many samples to force runtime of program to be long
+// and saturate specific L2 cache set 
 #define SAMPLES 20000
 
 #define BUFF_SIZE (1 << 21)
@@ -38,13 +41,18 @@ int main(int argc, char **argv)
 
     printf("Please type a message.\n");
     char text_buf[128];
+
+input:
     fgets(text_buf, sizeof(text_buf), stdin);
+
+    if (strcmp(text_buf, "exit\n") == 0)
+	goto exit;
 
     int unval_message = string_to_int(text_buf);
 
     if (unval_message > MAX_CHAR || unval_message < 0) {
         printf("Message value must be between 0 and 255 inclusive.\n");
-	return 0;
+	goto input;
     }
 
     char message = (char)unval_message;
@@ -52,10 +60,15 @@ int main(int argc, char **argv)
 
     for (int i = 0; i < SAMPLES; i++) {
 
+	// fences added to isolate cache accesses
+	// from rest of program and to force accesses
+	// into specific blocks
 	asm volatile("mfence");
 	
 	// access message set
-	for (int k = 0; k < 500; k++) {
+	// addresses accessed many times to further increase
+	// program runtime and saturate L2 cache set
+	for (int k = 0; k < 100; k++) {
             for (int i = 0; i < NUM_ADDRESSES; i++)
 	        *((char *)get_address(i, message, page_base)) = 0;
 	}
@@ -63,6 +76,9 @@ int main(int argc, char **argv)
 	asm volatile("mfence");
     }
 
+    //goto input;
+
+exit:
     printf("Sender finished.\n");
     return 0;
 }
